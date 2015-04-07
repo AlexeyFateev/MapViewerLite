@@ -4,6 +4,9 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
@@ -23,9 +26,7 @@ import javax.swing.event.ChangeListener;
 
 @SuppressWarnings("serial")
 
-
-
-public class MapViewerLite extends JFrame implements MouseWheelListener {
+public class MapViewerLite extends JFrame implements MouseMotionListener, MouseListener, MouseWheelListener {
 	
 	final static String listOfGeoSrvices_Str[] = {
 		" 2Gis map",
@@ -44,9 +45,10 @@ public class MapViewerLite extends JFrame implements MouseWheelListener {
         " Nokia hybrid",
     };
 		
-    int xSizeOfTile_Int=650, ySizeOfTile_Int=450, zoom_Int=15, indexOflistOfGeoSrv_Int=0;
+    int xSizeOfTile_Int=650, ySizeOfTile_Int=450, zoom_Int=15, indexOflistOfGeoSrv_Int=0,  xFirstPressed, yFirstPressed;
     Double xGeo_Double=30.719179, yGeo_Double=46.476796;
-	
+    public boolean isDragged= false;
+    
 	JComboBox<String> choicesJCBox = new JComboBox<String>( listOfGeoSrvices_Str );
 	ImagePanel panel = new ImagePanel();
 	String path; // = "http://static-maps.yandex.ru/1.x/?ll=30.719179,46.476796&z=18&size=350,350&l=sat,trf";
@@ -74,7 +76,6 @@ public class MapViewerLite extends JFrame implements MouseWheelListener {
                 setIndexOflistOfGeoSrvices(cb.getSelectedIndex());
                 redraw();
                 repaint();
-
             };
 		});
 				
@@ -96,8 +97,8 @@ public class MapViewerLite extends JFrame implements MouseWheelListener {
 		add("South", zoomSlider);
 		MouseWheelListener mouseWheelListener = null;
 		panel.addMouseWheelListener(this);
-		//panel.addMouseWheelListener(mouseWheelListener);		
-
+		panel.addMouseListener(this);
+		panel.addMouseMotionListener(this);
 		redraw();
 	}
 	
@@ -117,6 +118,92 @@ public class MapViewerLite extends JFrame implements MouseWheelListener {
 	    }
 	}
 	
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    	xFirstPressed = e.getX();
+        yFirstPressed = e.getY();
+    }
+    
+    @Override
+    public void mouseDragged(MouseEvent e) {
+
+    	isDragged = true;
+    }
+    
+    @Override
+    public void mouseMoved(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    	if (isDragged){
+    		
+    		double k = (double) (zoom_Int );
+    		k /= 400000;
+    		double x = k * (e.getX() - xFirstPressed);
+    		double y = k * (e.getY() - yFirstPressed);    		
+    		
+    		xGeo_Double -= x;
+    		yGeo_Double += y;
+    		isDragged = false;
+    		redraw();
+        }
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+    }
+
+	
+    public void mouseWheelMoved(MouseWheelEvent e) {
+    	
+        int notches = e.getWheelRotation();       
+        zoomSlider.setValue(getZoom() - notches);
+    }
+    
+
+	public void redraw() {
+		
+		try {
+			
+			url = new URL(getUrl());
+	        image = ImageIO.read(url);
+	     
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		panel.setImage(image);
+		repaint();
+	}
+
+	public void setIndexOflistOfGeoSrvices(int i) {
+		
+		indexOflistOfGeoSrv_Int = i;
+	}
+	
+	public int getZoom() {
+		
+		return zoom_Int;		
+	}
+	
+	public void setZoom(int z) {
+		
+		zoom_Int = z;		
+	}
+		
 	private String getUrl() {
 		
 		switch (indexOflistOfGeoSrv_Int) {
@@ -196,47 +283,7 @@ public class MapViewerLite extends JFrame implements MouseWheelListener {
 		return path;		
 	}
 	
-    public void mouseWheelMoved(MouseWheelEvent e) {
-    	
-        int notches = e.getWheelRotation();       
-        zoomSlider.setValue(getZoom() - notches);
-    }
-	
-	public void redraw() {
-		
-		try {
-			
-			url = new URL(getUrl());
-	        image = ImageIO.read(url);
-	     
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		panel.setImage(image);
-		repaint();
-	}
-
-	public void setIndexOflistOfGeoSrvices(int i) {
-		
-		indexOflistOfGeoSrv_Int = i;
-	}
-	
-	public int getZoom() {
-		
-		return zoom_Int;		
-	}
-	
-	public void setZoom(int z) {
-		
-		zoom_Int = z;		
-	}
-	
-
 	public static void main(String[] args) {
-
 
 		MapViewerLite frame = new MapViewerLite();		
 	}
