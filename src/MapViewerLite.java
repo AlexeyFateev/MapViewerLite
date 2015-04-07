@@ -25,7 +25,7 @@ import javax.swing.event.ChangeListener;
 
 
 
-public class MapViewerLite extends JFrame {
+public class MapViewerLite extends JFrame implements MouseWheelListener {
 	
 	final static String listOfGeoSrvices_Str[] = {
 		" 2Gis map",
@@ -95,7 +95,8 @@ public class MapViewerLite extends JFrame {
 		add("Center", panel);		
 		add("South", zoomSlider);
 		MouseWheelListener mouseWheelListener = null;
-		zoomSlider.addMouseWheelListener(mouseWheelListener);		
+		panel.addMouseWheelListener(this);
+		//panel.addMouseWheelListener(mouseWheelListener);		
 
 		redraw();
 	}
@@ -198,7 +199,7 @@ public class MapViewerLite extends JFrame {
     public void mouseWheelMoved(MouseWheelEvent e) {
     	
         int notches = e.getWheelRotation();       
-        zoomSlider.setValue(getZoom() + notches);
+        zoomSlider.setValue(getZoom() - notches);
     }
 	
 	public void redraw() {
